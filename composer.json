@@ -1,10 +1,11 @@
 {
-    "name": "your-name-here/BaseTwoACL",
-    "description": "BaseTwoACL plugin for CakePHP",
+    "name": "allanmcarvalho/base-two-acl",
+    "description": "Plugin for manage Access Control Level (ACL) for CakePHP 3 using the base 2 math power",
     "type": "cakephp-plugin",
+    "license": "MIT",
     "require": {
         "php": ">=5.5.9",
-        "cakephp/cakephp": ">=3.3.2 <4.0.0"
+        "cakephp/cakephp": ">=3.0.0 <4.0.0"
     },
     "require-dev": {
         "phpunit/phpunit": "*"
