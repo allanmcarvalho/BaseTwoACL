@@ -190,13 +190,13 @@ class ACLComponent extends Component
             switch ($type)
             {
                 case ACLPermissions::READ :
-                    $typeLabel = __d('jpc', 'read');
+                    $typeLabel = __d('bt_acl', 'read');
                     break;
                 case ACLPermissions::WRITE :
-                    $typeLabel = __d('jpc', 'write');
+                    $typeLabel = __d('bt_acl', 'write');
                     break;
                 case ACLPermissions::DELETE :
-                    $typeLabel = __d('jpc', 'delete');
+                    $typeLabel = __d('bt_acl', 'delete');
                     break;
             }
             $module = $this->Modules->get($module);
@@ -243,13 +243,13 @@ class ACLComponent extends Component
             switch ($type)
             {
                 case ACLPermissions::READ :
-                    $typeLabel = __d('jpc', 'read');
+                    $typeLabel = __d('bt_acl', 'read');
                     break;
                 case ACLPermissions::WRITE :
-                    $typeLabel = __d('jpc', 'write');
+                    $typeLabel = __d('bt_acl', 'write');
                     break;
                 case ACLPermissions::DELETE :
-                    $typeLabel = __d('jpc', 'delete');
+                    $typeLabel = __d('bt_acl', 'delete');
                     break;
             }
             $module = $this->Modules->get($module);
