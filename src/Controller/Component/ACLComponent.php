@@ -39,6 +39,12 @@ class ACLComponent extends Component
         parent::initialize($config);
     }
 
+    /**
+     * Takes the value of a sum and decomposes on the base 2 power
+     * @param int $value
+     * @return mixed
+     * @throws \Cake\Error\FatalErrorException
+     */
     private function decompose($value)
     {
         if ($value === null)
@@ -71,11 +77,15 @@ class ACLComponent extends Component
         return $result;
     }
 
+    /**
+     * Verifies if the logged in user is allowed in module "x" with permission "y"
+     * @param int $module
+     * @param ACLPermissions $type
+     * @return boolean
+     * @throws \Cake\Error\FatalErrorException
+     */
     public function verify($module, $type)
     {
-
-
-
         if (!in_array($type, [0, 1, 2, 3]))
         {
             throw new \Cake\Error\FatalErrorException(__d('bt_acl', 'Invalid ACL permission type'));
@@ -111,6 +121,12 @@ class ACLComponent extends Component
         }
     }
 
+    /**
+     * Verifies if the logged in user is allowed in module "x" with permission "y". If yes, grant the permission, if not, trigger an exception.
+     * @param int $module
+     * @param ACLPermissions $type
+     * @throws \Cake\Network\Exception\MethodNotAllowedException
+     */
     public function allow($module, $type)
     {
         if (!$this->verify($module, $type))
@@ -135,6 +151,12 @@ class ACLComponent extends Component
         }
     }
 
+    /**
+     * Verifies if the logged in user is allowed in module "x" with permission "y". If yes, trigger an exception, if not, grant the permission.
+     * @param int $module
+     * @param ACLPermissions $type
+     * @throws \Cake\Network\Exception\MethodNotAllowedException
+     */
     public function deny($module, $type)
     {
         if ($this->verify($module, $type))
