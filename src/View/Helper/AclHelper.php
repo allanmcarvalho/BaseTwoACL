@@ -16,7 +16,7 @@ use BaseTwoACL\Controller\Component\ACLPermissions;
  * CakePHP AclHelper
  * @author allan
  */
-class AclHelper extends Helper
+class ACLHelper extends Helper
 {
 
     public $helpers = [
@@ -146,7 +146,6 @@ class AclHelper extends Helper
                 $value = $this->request->session()->read('Auth.User.delete');
                 break;
         }
-
 
         $decomposed = $this->decompose($value);
 

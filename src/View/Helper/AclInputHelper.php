@@ -14,7 +14,7 @@ use Cake\View\Helper;
  * CakePHP AclInputHelper
  * @author allan
  */
-class AclInputHelper extends Helper
+class ACLInputHelper extends Helper
 {
 
     public $helpers = ['Form'];
