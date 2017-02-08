@@ -40,7 +40,7 @@ class ACLComponent extends Component
      * @var string 
      */
     private $_defaultDenyType;
-    
+
     /**
      * Default redirect in deny
      * @var mixed 
@@ -59,9 +59,9 @@ class ACLComponent extends Component
         $this->_setDenyType($config['denyType']);
 
         $this->_defaultModule = $config['module'];
-        
+
         $this->_defaultRedirect = $config['redirect'];
-        
+
         $this->Modules = TableRegistry::get($this->_defaultModule);
         parent::initialize($config);
     }
@@ -115,8 +115,52 @@ class ACLComponent extends Component
                 $result[$i] = false;
             }
         }
-
         return $result;
+    }
+
+    /**
+     * 
+     * @param \Cake\ORM\Entity $user
+     * @param array $data
+     * @return \Cake\ORM\Entity
+     * @throws \Cake\Error\FatalErrorException
+     */
+    public function patchUserEntity($user, $data)
+    {
+        if (!isset($data['base_two_acl']))
+        {
+            throw new \Cake\Error\FatalErrorException(__d('bt_acl', 'Required data not found in request'));
+        }
+
+        $read   = 0;
+        $write  = 0;
+        $delete = 0;
+
+        ksort($data['base_two_acl']);
+
+        foreach ($data['base_two_acl'] as $key => $permission)
+        {
+            
+            if ($permission == 1)
+            {
+                $read += $key;
+            } elseif ($permission == 2)
+            {
+                $read  += $key;
+                $write += $key;
+            } elseif ($permission == 3)
+            {
+                $read   += $key;
+                $write  += $key;
+                $delete += $key;
+            }
+        }
+
+        $user->acl_read   = $read;
+        $user->acl_write  = $write;
+        $user->acl_delete = $delete;
+
+        return $user;
     }
 
     /**
@@ -141,13 +185,13 @@ class ACLComponent extends Component
         switch ($type)
         {
             case ACLPermissions::READ :
-                $value = $this->request->session()->read('Auth.User.read');
+                $value = $this->request->session()->read('Auth.User.acl_read');
                 break;
             case ACLPermissions::WRITE :
-                $value = $this->request->session()->read('Auth.User.write');
+                $value = $this->request->session()->read('Auth.User.acl_write');
                 break;
             case ACLPermissions::DELETE :
-                $value = $this->request->session()->read('Auth.User.delete');
+                $value = $this->request->session()->read('Auth.User.acl_delete');
                 break;
         }
 
@@ -176,7 +220,7 @@ class ACLComponent extends Component
         {
             $this->_defaultRedirect = $redirect;
         }
-        
+
         if ($denyType !== null)
         {
             $this->_setDenyType($denyType);
@@ -229,7 +273,7 @@ class ACLComponent extends Component
         {
             $this->_defaultRedirect = $redirect;
         }
-        
+
         if ($denyType !== null)
         {
             $this->_setDenyType($denyType);

@@ -52,9 +52,9 @@ class ACLHelper extends Helper
 
         if ($user !== null)
         {
-            $userPermissions['read']   = $this->decompose($user->read);
-            $userPermissions['write']  = $this->decompose($user->write);
-            $userPermissions['delete'] = $this->decompose($user->delete);
+            $userPermissions['read']   = $this->decompose($user->acl_read);
+            $userPermissions['write']  = $this->decompose($user->acl_write);
+            $userPermissions['delete'] = $this->decompose($user->acl_delete);
         }
 
 
@@ -72,8 +72,8 @@ class ACLHelper extends Helper
             ]);
         }
 
-        
-        
+
+
         return $result;
     }
 
@@ -114,7 +114,7 @@ class ACLHelper extends Helper
 
         return $result;
     }
-    
+
     /**
      * Verifies if the logged in user is allowed in module "x" with permission "y"
      * @param int $module
@@ -129,21 +129,21 @@ class ACLHelper extends Helper
             throw new \Cake\Error\FatalErrorException(__d('bt_acl', 'Invalid ACL permission type'));
         }
 
-        if(!$this->request->session()->check('Auth.User'))
+        if (!$this->request->session()->check('Auth.User'))
         {
             return false;
         }
-        
+
         switch ($type)
         {
             case ACLPermissions::READ :
-                $value = $this->request->session()->read('Auth.User.read');
+                $value = $this->request->session()->read('Auth.User.acl_read');
                 break;
             case ACLPermissions::WRITE :
-                $value = $this->request->session()->read('Auth.User.write');
+                $value = $this->request->session()->read('Auth.User.acl_write');
                 break;
             case ACLPermissions::DELETE :
-                $value = $this->request->session()->read('Auth.User.delete');
+                $value = $this->request->session()->read('Auth.User.acl_delete');
                 break;
         }
 

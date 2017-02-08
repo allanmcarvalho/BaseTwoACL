@@ -123,7 +123,7 @@ class ACLInputHelper extends Helper
         ];
 
         $options['value'] = 0;
-        return $this->Form->radio("acl_{$this->module->id}", [$options], ['label' => false, 'hiddenField' => false, 'value' => $this->permission]);
+        return $this->Form->radio("base_two_acl.{$this->module->id}", [$options], ['label' => false, 'hiddenField' => false, 'value' => $this->permission]);
     }
 
     /**
@@ -147,7 +147,7 @@ class ACLInputHelper extends Helper
         ];
 
         $options['value'] = 1;
-        return $this->Form->radio("acl_{$this->module->id}", [$options], ['label' => false, 'hiddenField' => false, 'value' => $this->permission]);
+        return $this->Form->radio("base_two_acl.{$this->module->id}", [$options], ['label' => false, 'hiddenField' => false, 'value' => $this->permission]);
     }
 
     /**
@@ -171,7 +171,7 @@ class ACLInputHelper extends Helper
         ];
 
         $options['value'] = 2;
-        return $this->Form->radio("acl_{$this->module->id}", [$options], ['label' => false, 'hiddenField' => false, 'value' => $this->permission]);
+        return $this->Form->radio("base_two_acl.{$this->module->id}", [$options], ['label' => false, 'hiddenField' => false, 'value' => $this->permission]);
     }
 
     /**
@@ -195,7 +195,7 @@ class ACLInputHelper extends Helper
         ];
 
         $options['value'] = 3;
-        return $this->Form->radio("acl_{$this->module->id}", [$options], ['label' => false, 'hiddenField' => false, 'value' => $this->permission]);
+        return $this->Form->radio("base_two_acl.{$this->module->id}", [$options], ['label' => false, 'hiddenField' => false, 'value' => $this->permission]);
     }
 
 }
