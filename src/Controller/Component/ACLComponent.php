@@ -19,24 +19,66 @@ use BaseTwoACL\Controller\Component\ACLPermissions;
 class ACLComponent extends Component
 {
 
+    public $components = [
+        'Flash'
+    ];
+
     /**
      *
      * @var \Cake\ORM\Table; 
      */
     private $Modules;
+
+    /**
+     * Default Table name
+     * @var string 
+     */
+    private $_defaultModule;
+
+    /**
+     * Type of deny result
+     * @var string 
+     */
+    private $_defaultDenyType;
     
-    
-    private $__defaultModule = 'Modules';
+    /**
+     * Default redirect in deny
+     * @var mixed 
+     */
+    private $_defaultRedirect;
 
     public function initialize(array $config)
     {
-        if (!empty($config['module']))
+
+        $config += [
+            'denyType' => 'flash',
+            'module'   => 'Modules',
+            'redirect' => $this->request->referer()
+        ];
+
+        $this->_setDenyType($config['denyType']);
+
+        $this->_defaultModule = $config['module'];
+        
+        $this->_defaultRedirect = $config['redirect'];
+        
+        $this->Modules = TableRegistry::get($this->_defaultModule);
+        parent::initialize($config);
+    }
+
+    /**
+     * Set a type of deny result
+     * @param string $type
+     * @throws \Cake\Error\FatalErrorException
+     */
+    private function _setDenyType($type)
+    {
+        if (!in_array(strtolower($type), ['exception', 'flash', 'boolean']))
         {
-            $this->__defaultModule = $config['module'];
+            throw new \Cake\Error\FatalErrorException(__d('bt_acl', 'The "errorType" config should be "flash", "boolean" or "exception"'));
         }
 
-        $this->Modules = TableRegistry::get($this->__defaultModule);
-        parent::initialize($config);
+        $this->_defaultDenyType = strtolower($type);
     }
 
     /**
@@ -79,8 +121,8 @@ class ACLComponent extends Component
 
     /**
      * Verifies if the logged in user is allowed in module "x" with permission "y"
-     * @param int $module
-     * @param ACLPermissions $type
+     * @param int $module module id to verify
+     * @param ACLPermissions $type type of permission to verify
      * @return boolean
      * @throws \Cake\Error\FatalErrorException
      */
@@ -91,11 +133,11 @@ class ACLComponent extends Component
             throw new \Cake\Error\FatalErrorException(__d('bt_acl', 'Invalid ACL permission type'));
         }
 
-        if(!$this->request->session()->check('Auth.User'))
+        if (!$this->request->session()->check('Auth.User'))
         {
             return false;
         }
-        
+
         switch ($type)
         {
             case ACLPermissions::READ :
@@ -108,7 +150,6 @@ class ACLComponent extends Component
                 $value = $this->request->session()->read('Auth.User.delete');
                 break;
         }
-
 
         $decomposed = $this->decompose($value);
 
@@ -123,13 +164,28 @@ class ACLComponent extends Component
 
     /**
      * Verifies if the logged in user is allowed in module "x" with permission "y". If yes, grant the permission, if not, trigger an exception.
-     * @param int $module
-     * @param ACLPermissions $type
+     * @param int $module module id to verify
+     * @param ACLPermissions $type type of permission to verify
+     * @param boolean $exception Chooses if in case of denied permission, a flash or an exception will be executed
      * @throws \Cake\Network\Exception\MethodNotAllowedException
+     * @return type Description
      */
-    public function allow($module, $type)
+    public function allow($module, $type, $redirect = null, $denyType = null)
     {
-        if (!$this->verify($module, $type))
+        if ($redirect !== null)
+        {
+            $this->_defaultRedirect = $redirect;
+        }
+        
+        if ($denyType !== null)
+        {
+            $this->_setDenyType($denyType);
+        }
+
+        if ($this->verify($module, $type))
+        {
+            return true;
+        } else
         {
             switch ($type)
             {
@@ -143,11 +199,21 @@ class ACLComponent extends Component
                     $typeLabel = __d('jpc', 'delete');
                     break;
             }
-            
             $module = $this->Modules->get($module);
+
             $this->log(__d('bt_acl', 'The user was prevented from access controller/action: "{0}" because he had no {1} permission on the module "{2}"', $this->request->param('controller') . '/' . $this->request->param('action'), strtoupper($typeLabel), $module->name), \Psr\Log\LogLevel::NOTICE);
 
-            throw new \Cake\Network\Exception\MethodNotAllowedException(__d('bt_acl', 'You are not allowed to {0} in module "{1}"', strtoupper($typeLabel), $module->name));
+            if ($this->_defaultDenyType == 'flash')
+            {
+                $this->Flash->error(__d('bt_acl', 'You are not allowed to {0} in module "{1}"', strtoupper($typeLabel), $module->name));
+                return $this->_registry->getController()->redirect($this->_defaultRedirect);
+            } elseif ($this->_defaultDenyType == 'boolean')
+            {
+                return false;
+            } elseif ($this->_defaultDenyType == 'exception')
+            {
+                throw new \Cake\Network\Exception\MethodNotAllowedException(__d('bt_acl', 'You are not allowed to {0} in module "{1}"', strtoupper($typeLabel), $module->name));
+            }
         }
     }
 
@@ -157,9 +223,22 @@ class ACLComponent extends Component
      * @param ACLPermissions $type
      * @throws \Cake\Network\Exception\MethodNotAllowedException
      */
-    public function deny($module, $type)
+    public function deny($module, $type, $redirect = null, $denyType = null)
     {
-        if ($this->verify($module, $type))
+        if ($redirect !== null)
+        {
+            $this->_defaultRedirect = $redirect;
+        }
+        
+        if ($denyType !== null)
+        {
+            $this->_setDenyType($denyType);
+        }
+
+        if (!$this->verify($module, $type))
+        {
+            return true;
+        } else
         {
             switch ($type)
             {
@@ -173,11 +252,21 @@ class ACLComponent extends Component
                     $typeLabel = __d('jpc', 'delete');
                     break;
             }
-            
             $module = $this->Modules->get($module);
+
             $this->log(__d('bt_acl', 'The user was prevented from access controller/action: "{0}" because he had {1} permission on the module "{2}"', $this->request->param('controller') . '/' . $this->request->param('action'), strtoupper($typeLabel), $module->name), \Psr\Log\LogLevel::NOTICE);
 
-            throw new \Cake\Network\Exception\MethodNotAllowedException(__d('bt_acl', 'You are not allowed to {0} in module "{1}"', strtoupper($typeLabel), $module->name));
+            if ($this->_defaultDenyType == 'flash')
+            {
+                $this->Flash->error(__d('bt_acl', 'You can not continue because you are allowed to {0} in module "{1}"', strtoupper($typeLabel), $module->name));
+                return $this->_registry->getController()->redirect($this->_defaultRedirect);
+            } elseif ($this->_defaultDenyType == 'boolean')
+            {
+                return false;
+            } elseif ($this->_defaultDenyType == 'exception')
+            {
+                throw new \Cake\Network\Exception\MethodNotAllowedException(__d('bt_acl', 'You are not allowed to {0} in module "{1}"', strtoupper($typeLabel), $module->name));
+            }
         }
     }
 
