@@ -307,6 +307,60 @@ class ACLComponent extends Component
             }
         }
     }
+    
+    /**
+     * Verifies if the logged in user is allowed in module "x" with permission "y". If yes, grant the permission, if not, trigger an exception.
+     * @param int $module module id to verify
+     * @param ACLPermissions $type type of permission to verify
+     * @param boolean $exception Chooses if in case of denied permission, a flash or an exception will be executed
+     * @throws \Cake\Network\Exception\MethodNotAllowedException
+     * @return type Description
+     */
+    public function allowIfHaveAnyPermission($type, $redirect = null, $denyType = null)
+    {
+        if ($redirect !== null)
+        {
+            $this->_defaultRedirect = $redirect;
+        }
+
+        if ($denyType !== null)
+        {
+            $this->_setDenyType($denyType);
+        }
+
+        if ($this->verifyIfHaveAnyPermisson($type))
+        {
+            return true;
+        } else
+        {
+            switch ($type)
+            {
+                case ACLPermissions::READ :
+                    $typeLabel = __d('bt_acl', 'read');
+                    break;
+                case ACLPermissions::WRITE :
+                    $typeLabel = __d('bt_acl', 'write');
+                    break;
+                case ACLPermissions::DELETE :
+                    $typeLabel = __d('bt_acl', 'delete');
+                    break;
+            }
+
+            $this->log(__d('bt_acl', 'The user was prevented from access controller/action: "{0}" because he had no {1} permission at least one module', $this->request->param('controller') . '/' . $this->request->param('action'), strtoupper($typeLabel)), \Psr\Log\LogLevel::NOTICE);
+
+            if ($this->_defaultDenyType == 'flash')
+            {
+                $this->Flash->error(__d('bt_acl', 'You must be authorized to {0} at least one module', strtoupper($typeLabel)));
+                return $this->_registry->getController()->redirect($this->_defaultRedirect);
+            } elseif ($this->_defaultDenyType == 'boolean')
+            {
+                return false;
+            } elseif ($this->_defaultDenyType == 'exception')
+            {
+                throw new \Cake\Network\Exception\MethodNotAllowedException(__d('bt_acl', 'You must be authorized to {0} at least one module', strtoupper($typeLabel)));
+            }
+        }
+    }
 
     /**
      * Verifies if the logged in user is allowed in module "x" with permission "y". If yes, trigger an exception, if not, grant the permission.
