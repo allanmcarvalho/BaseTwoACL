@@ -157,5 +157,50 @@ class ACLHelper extends Helper
             throw new \Cake\Error\FatalErrorException(__d('bt_acl', 'Module id: {0} does not exist. It must be of the power base 2. Ex.: 1, 2, 4, 8, 16...', $module));
         }
     }
+    
+    /**
+     * Verifies if the logged in user is allowed a in at least one module with permission "x"
+     * @param ACLPermissions $type type of permission to verify
+     * @return boolean
+     * @throws \Cake\Error\FatalErrorException
+     */
+    public function verifyIfHaveAnyPermisson($type)
+    {
+        if (!in_array($type, [0, 1, 2, 3]))
+        {
+            throw new \Cake\Error\FatalErrorException(__d('bt_acl', 'Invalid ACL permission type'));
+        }
+
+        if (!$this->request->session()->check('Auth.User'))
+        {
+            return false;
+        }
+
+        switch ($type)
+        {
+            case ACLPermissions::READ :
+                $value = $this->request->session()->read('Auth.User.acl_read');
+                break;
+            case ACLPermissions::WRITE :
+                $value = $this->request->session()->read('Auth.User.acl_write');
+                break;
+            case ACLPermissions::DELETE :
+                $value = $this->request->session()->read('Auth.User.acl_delete');
+                break;
+        }
+
+        $decomposed = $this->decompose($value);
+
+        $result = false;
+        foreach ($decomposed as $key => $item)
+        {
+            if($item == true)
+            {
+                $result[$key] = $item;
+            }
+        }
+        
+        return $result;
+    }
 
 }
