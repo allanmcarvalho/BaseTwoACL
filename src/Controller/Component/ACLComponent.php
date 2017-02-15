@@ -428,4 +428,13 @@ class ACLComponent extends Component
     {
         return $this->redirectUrl;
     }
+    
+    /**
+     * Return a array or string of redirect
+     * @return mixed
+     */
+    public function getRedirect()
+    {
+        return $this->_registry->getController()->redirect($this->getRedirectUrl());
+    }
 }
