@@ -46,6 +46,7 @@ class ACLComponent extends Component
      * @var mixed 
      */
     private $_defaultRedirect;
+    public $redirectUrl;
 
     public function initialize(array $config)
     {
@@ -61,6 +62,7 @@ class ACLComponent extends Component
         $this->_defaultModule = $config['module'];
 
         $this->_defaultRedirect = $config['redirect'];
+        $this->redirectUrl      = $config['redirect'];
 
         $this->Modules = TableRegistry::get($this->_defaultModule);
         parent::initialize($config);
@@ -239,17 +241,17 @@ class ACLComponent extends Component
 
         $decomposed = $this->decompose($value);
 
-        
-        
+
+
         $result = false;
         foreach ($decomposed as $key => $item)
         {
-            if($item == true)
+            if ($item == true)
             {
                 $result[$key] = $item;
             }
         }
-        
+
         return $result;
     }
 
@@ -292,22 +294,23 @@ class ACLComponent extends Component
             }
             $module = $this->Modules->get($module);
 
-            $this->log(__d('bt_acl', 'The user was prevented from access controller/action: "{0}" because he had no {1} permission on the module "{2}"', $this->request->param('controller') . '/' . $this->request->param('action'), strtoupper($typeLabel), $module->name), \Psr\Log\LogLevel::NOTICE);
+            $this->log(__d('bt_acl', 'The user was prevented from access controller/action: "{0}" because he had no "{1}" permission on the module "{2}"', $this->request->param('controller') . '/' . $this->request->param('action'), $typeLabel, $module->name), \Psr\Log\LogLevel::NOTICE);
 
             if ($this->_defaultDenyType == 'flash')
             {
-                $this->Flash->error(__d('bt_acl', 'You are not allowed to {0} in module "{1}"', strtoupper($typeLabel), $module->name));
-                return $this->_registry->getController()->redirect($this->_defaultRedirect);
+                $this->Flash->error(__d('bt_acl', 'You are not allowed to "{0}" in module "{1}"', $typeLabel, $module->name));
+                $this->redirectUrl = $this->_defaultRedirect;
+                return false;
             } elseif ($this->_defaultDenyType == 'boolean')
             {
                 return false;
             } elseif ($this->_defaultDenyType == 'exception')
             {
-                throw new \Cake\Network\Exception\MethodNotAllowedException(__d('bt_acl', 'You are not allowed to {0} in module "{1}"', strtoupper($typeLabel), $module->name));
+                throw new \Cake\Network\Exception\MethodNotAllowedException(__d('bt_acl', 'You are not allowed to "{0}" in module "{1}"', $typeLabel, $module->name));
             }
         }
     }
-    
+
     /**
      * Verifies if the logged in user is allowed in module "x" with permission "y". If yes, grant the permission, if not, trigger an exception.
      * @param int $module module id to verify
@@ -346,18 +349,19 @@ class ACLComponent extends Component
                     break;
             }
 
-            $this->log(__d('bt_acl', 'The user was prevented from access controller/action: "{0}" because he had no {1} permission at least one module', $this->request->param('controller') . '/' . $this->request->param('action'), strtoupper($typeLabel)), \Psr\Log\LogLevel::NOTICE);
+            $this->log(__d('bt_acl', 'The user was prevented from access controller/action: "{0}" because he had no "{1}" permission at least one module', $this->request->param('controller') . '/' . $this->request->param('action'), $typeLabel), \Psr\Log\LogLevel::NOTICE);
 
             if ($this->_defaultDenyType == 'flash')
             {
-                $this->Flash->error(__d('bt_acl', 'You must be authorized to {0} at least one module', strtoupper($typeLabel)));
-                return $this->_registry->getController()->redirect($this->_defaultRedirect);
+                $this->Flash->error(__d('bt_acl', 'You must be authorized to "{0}" at least one module', $typeLabel));
+                $this->redirectUrl = $this->_defaultRedirect;
+                return false;
             } elseif ($this->_defaultDenyType == 'boolean')
             {
                 return false;
             } elseif ($this->_defaultDenyType == 'exception')
             {
-                throw new \Cake\Network\Exception\MethodNotAllowedException(__d('bt_acl', 'You must be authorized to {0} at least one module', strtoupper($typeLabel)));
+                throw new \Cake\Network\Exception\MethodNotAllowedException(__d('bt_acl', 'You must be authorized to "{0}" at least one module', $typeLabel));
             }
         }
     }
@@ -399,20 +403,29 @@ class ACLComponent extends Component
             }
             $module = $this->Modules->get($module);
 
-            $this->log(__d('bt_acl', 'The user was prevented from access controller/action: "{0}" because he had {1} permission on the module "{2}"', $this->request->param('controller') . '/' . $this->request->param('action'), strtoupper($typeLabel), $module->name), \Psr\Log\LogLevel::NOTICE);
+            $this->log(__d('bt_acl', 'The user was prevented from access controller/action: "{0}" because he had "{1}" permission on the module "{2}"', $this->request->param('controller') . '/' . $this->request->param('action'), $typeLabel, $module->name), \Psr\Log\LogLevel::NOTICE);
 
             if ($this->_defaultDenyType == 'flash')
             {
-                $this->Flash->error(__d('bt_acl', 'You can not continue because you are allowed to {0} in module "{1}"', strtoupper($typeLabel), $module->name));
-                return $this->_registry->getController()->redirect($this->_defaultRedirect);
+                $this->Flash->error(__d('bt_acl', 'You can not continue because you are allowed to "{0}" in module "{1}"', $typeLabel, $module->name));
+                $this->redirectUrl = $this->_defaultRedirect;
+                return false;
             } elseif ($this->_defaultDenyType == 'boolean')
             {
                 return false;
             } elseif ($this->_defaultDenyType == 'exception')
             {
-                throw new \Cake\Network\Exception\MethodNotAllowedException(__d('bt_acl', 'You are not allowed to {0} in module "{1}"', strtoupper($typeLabel), $module->name));
+                throw new \Cake\Network\Exception\MethodNotAllowedException(__d('bt_acl', 'You are not allowed to "{0}" in module "{1}"', $typeLabel, $module->name));
             }
         }
     }
 
+    /**
+     * Return a array or string of redirect
+     * @return mixed
+     */
+    public function getRedirectUrl()
+    {
+        return $this->redirectUrl;
+    }
 }
