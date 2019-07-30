@@ -1,12 +1,11 @@
 <?php
 
-
 namespace BaseTwoACL;
 
 use Cake\Core\BasePlugin;
 
 /**
- * Plugin for BaseTwoACL
+ * Plugin class for CakePHP 3.6.0 plugin collection.
  */
 class Plugin extends BasePlugin
 {
