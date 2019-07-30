@@ -8,32 +8,35 @@
 
 namespace BaseTwoACL\View\Helper;
 
+use App\Model\Entity\Module;
+use Cake\ORM\Entity;
 use Cake\View\Helper;
 
 /**
  * CakePHP AclInputHelper
+ * @property Helper\FormHelper Form
  * @author allan
  */
 class ACLInputHelper extends Helper
 {
 
     public $helpers = ['Form'];
-    
+
     /**
      * The entity with the module information
-     * @var \Cake\ORM\Entity 
+     * @var Entity|Module
      */
     public $module;
-    
+
     /**
      * Contains the read, write, and delete permissions for a module
-     * @var array 
+     * @var array
      */
     public $permissions;
-    
+
     /**
      * Contains the default permission to automatically select the correct radio button
-     * @var int 
+     * @var int
      */
     public $permission;
 
@@ -65,7 +68,7 @@ class ACLInputHelper extends Helper
         }
 
     }
-    
+
     /**
      * The module id represented in this object
      * @return int

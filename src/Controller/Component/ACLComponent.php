@@ -8,12 +8,18 @@
 
 namespace BaseTwoACL\Controller\Component;
 
+use App\Model\Entity\User;
 use Cake\Controller\Component;
+use Cake\Error\FatalErrorException;
+use Cake\Network\Exception\MethodNotAllowedException;
+use Cake\ORM\Entity;
+use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
-use BaseTwoACL\Controller\Component\ACLPermissions;
+use Psr\Log\LogLevel;
 
 /**
  * CakePHP ACLComponent
+ * @property Component\FlashComponent Flash
  * @author allan
  */
 class ACLComponent extends Component
@@ -25,25 +31,25 @@ class ACLComponent extends Component
 
     /**
      *
-     * @var \Cake\ORM\Table; 
+     * @var Table;
      */
     private $Modules;
 
     /**
      * Default Table name
-     * @var string 
+     * @var string
      */
     private $_defaultModule;
 
     /**
      * Type of deny result
-     * @var string 
+     * @var string
      */
     private $_defaultDenyType;
 
     /**
      * Default redirect in deny
-     * @var mixed 
+     * @var mixed
      */
     private $_defaultRedirect;
     public $redirectUrl;
@@ -54,7 +60,7 @@ class ACLComponent extends Component
         $config += [
             'denyType' => 'flash',
             'module'   => 'Modules',
-            'redirect' => $this->request->referer()
+            'redirect' => $this->getController()->getRequest()->referer()
         ];
 
         $this->_setDenyType($config['denyType']);
@@ -64,20 +70,20 @@ class ACLComponent extends Component
         $this->_defaultRedirect = $config['redirect'];
         $this->redirectUrl      = $config['redirect'];
 
-        $this->Modules = TableRegistry::get($this->_defaultModule);
+        $this->Modules = TableRegistry::getTableLocator()->get($this->_defaultModule);
         parent::initialize($config);
     }
 
     /**
      * Set a type of deny result
      * @param string $type
-     * @throws \Cake\Error\FatalErrorException
+     * @throws FatalErrorException
      */
     private function _setDenyType($type)
     {
         if (!in_array(strtolower($type), ['exception', 'flash', 'boolean']))
         {
-            throw new \Cake\Error\FatalErrorException(__d('bt_acl', 'The "errorType" config should be "flash", "boolean" or "exception"'));
+            throw new FatalErrorException(__d('bt_acl', 'The "errorType" config should be "flash", "boolean" or "exception"'));
         }
 
         $this->_defaultDenyType = strtolower($type);
@@ -87,13 +93,13 @@ class ACLComponent extends Component
      * Takes the value of a sum and decomposes on the base 2 power
      * @param int $value
      * @return mixed
-     * @throws \Cake\Error\FatalErrorException
+     * @throws FatalErrorException
      */
     private function decompose($value)
     {
         if ($value === null)
         {
-            throw new \Cake\Error\FatalErrorException(__d('bt_acl', 'A value is required for decomposition'));
+            throw new FatalErrorException(__d('bt_acl', 'A value is required for decomposition'));
         }
 
         $max = $this->Modules->find()->last()->id;
@@ -103,9 +109,9 @@ class ACLComponent extends Component
 
         if ($value > $maxAllowedValue)
         {
-            throw new \Cake\Error\FatalErrorException(__d('bt_acl', 'The value is greater than the maximum possible sum'));
+            throw new FatalErrorException(__d('bt_acl', 'The value is greater than the maximum possible sum'));
         }
-
+        $result = [];
         for ($i = $max; $i >= 1; $i = $i / 2)
         {
             if ($value >= $i and $value < 2 * $i)
@@ -121,17 +127,17 @@ class ACLComponent extends Component
     }
 
     /**
-     * 
-     * @param \Cake\ORM\Entity $user
+     *
+     * @param Entity|User $user
      * @param array $data
-     * @return \Cake\ORM\Entity
-     * @throws \Cake\Error\FatalErrorException
+     * @return Entity
+     * @throws FatalErrorException
      */
     public function patchUserEntity($user, $data)
     {
         if (!isset($data['base_two_acl']))
         {
-            throw new \Cake\Error\FatalErrorException(__d('bt_acl', 'Required data not found in request'));
+            throw new FatalErrorException(__d('bt_acl', 'Required data not found in request'));
         }
 
         $read   = 0;
@@ -170,30 +176,31 @@ class ACLComponent extends Component
      * @param int $module module id to verify
      * @param ACLPermissions $type type of permission to verify
      * @return boolean
-     * @throws \Cake\Error\FatalErrorException
+     * @throws FatalErrorException
      */
     public function verify($module, $type)
     {
         if (!in_array($type, [0, 1, 2, 3]))
         {
-            throw new \Cake\Error\FatalErrorException(__d('bt_acl', 'Invalid ACL permission type'));
+            throw new FatalErrorException(__d('bt_acl', 'Invalid ACL permission type'));
         }
 
-        if (!$this->request->session()->check('Auth.User'))
+        if (!$this->getController()->getRequest()->getSession()->check('Auth.User'))
         {
             return false;
         }
 
+        $value = -1;
         switch ($type)
         {
             case ACLPermissions::READ :
-                $value = $this->request->session()->read('Auth.User.acl_read');
+                $value = $this->getController()->getRequest()->getSession()->read('Auth.User.acl_read');
                 break;
             case ACLPermissions::WRITE :
-                $value = $this->request->session()->read('Auth.User.acl_write');
+                $value = $this->getController()->getRequest()->getSession()->read('Auth.User.acl_write');
                 break;
             case ACLPermissions::DELETE :
-                $value = $this->request->session()->read('Auth.User.acl_delete');
+                $value = $this->getController()->getRequest()->getSession()->read('Auth.User.acl_delete');
                 break;
         }
 
@@ -204,7 +211,7 @@ class ACLComponent extends Component
             return (bool) $decomposed[$module];
         } else
         {
-            throw new \Cake\Error\FatalErrorException(__d('bt_acl', 'Module id: {0} does not exist. It must be of the power base 2. Ex.: 1, 2, 4, 8, 16...', $module));
+            throw new FatalErrorException(__d('bt_acl', 'Module id: {0} does not exist. It must be of the power base 2. Ex.: 1, 2, 4, 8, 16...', $module));
         }
     }
 
@@ -212,13 +219,13 @@ class ACLComponent extends Component
      * Verifies if the logged in user is allowed a in at least one module with permission "x"
      * @param ACLPermissions $type type of permission to verify
      * @return boolean
-     * @throws \Cake\Error\FatalErrorException
+     * @throws FatalErrorException
      */
     public function verifyIfHaveAnyPermisson($type)
     {
         if (!in_array($type, [0, 1, 2, 3]))
         {
-            throw new \Cake\Error\FatalErrorException(__d('bt_acl', 'Invalid ACL permission type'));
+            throw new FatalErrorException(__d('bt_acl', 'Invalid ACL permission type'));
         }
 
         if (!$this->request->session()->check('Auth.User'))
@@ -229,13 +236,13 @@ class ACLComponent extends Component
         switch ($type)
         {
             case ACLPermissions::READ :
-                $value = $this->request->session()->read('Auth.User.acl_read');
+                $value = $this->getController()->getRequest()->getSession()->read('Auth.User.acl_read');
                 break;
             case ACLPermissions::WRITE :
-                $value = $this->request->session()->read('Auth.User.acl_write');
+                $value = $this->getController()->getRequest()->getSession()->read('Auth.User.acl_write');
                 break;
             case ACLPermissions::DELETE :
-                $value = $this->request->session()->read('Auth.User.acl_delete');
+                $value = $this->getController()->getRequest()->getSession()->read('Auth.User.acl_delete');
                 break;
         }
 
@@ -259,9 +266,9 @@ class ACLComponent extends Component
      * Verifies if the logged in user is allowed in module "x" with permission "y". If yes, grant the permission, if not, trigger an exception.
      * @param int $module module id to verify
      * @param ACLPermissions $type type of permission to verify
-     * @param boolean $exception Chooses if in case of denied permission, a flash or an exception will be executed
-     * @throws \Cake\Network\Exception\MethodNotAllowedException
-     * @return type Description
+     * @param null $redirect
+     * @param null $denyType
+     * @return bool Description
      */
     public function allow($module, $type, $redirect = null, $denyType = null)
     {
@@ -280,6 +287,7 @@ class ACLComponent extends Component
             return true;
         } else
         {
+            $typeLabel = '';
             switch ($type)
             {
                 case ACLPermissions::READ :
@@ -294,7 +302,7 @@ class ACLComponent extends Component
             }
             $module = $this->Modules->get($module);
 
-            $this->log(__d('bt_acl', 'The user was prevented from access controller/action: "{0}" because he had no "{1}" permission on the module "{2}"', $this->request->param('controller') . '/' . $this->request->param('action'), $typeLabel, $module->name), \Psr\Log\LogLevel::NOTICE);
+            $this->log(__d('bt_acl', 'The user was prevented from access controller/action: "{0}" because he had no "{1}" permission on the module "{2}"', $this->getController()->getRequest()->getParam('controller') . '/' . $this->getController()->getRequest()->getParam('action'), $typeLabel, $module->name), LogLevel::NOTICE);
 
             if ($this->_defaultDenyType == 'flash')
             {
@@ -306,18 +314,18 @@ class ACLComponent extends Component
                 return false;
             } elseif ($this->_defaultDenyType == 'exception')
             {
-                throw new \Cake\Network\Exception\MethodNotAllowedException(__d('bt_acl', 'You are not allowed to "{0}" in module "{1}"', $typeLabel, $module->name));
+                throw new MethodNotAllowedException(__d('bt_acl', 'You are not allowed to "{0}" in module "{1}"', $typeLabel, $module->name));
             }
         }
+        return false;
     }
 
     /**
      * Verifies if the logged in user is allowed in module "x" with permission "y". If yes, grant the permission, if not, trigger an exception.
-     * @param int $module module id to verify
      * @param ACLPermissions $type type of permission to verify
-     * @param boolean $exception Chooses if in case of denied permission, a flash or an exception will be executed
-     * @throws \Cake\Network\Exception\MethodNotAllowedException
-     * @return type Description
+     * @param null $redirect
+     * @param null $denyType
+     * @return bool Description
      */
     public function allowIfHaveAnyPermission($type, $redirect = null, $denyType = null)
     {
@@ -336,6 +344,7 @@ class ACLComponent extends Component
             return true;
         } else
         {
+            $typeLabel = '';
             switch ($type)
             {
                 case ACLPermissions::READ :
@@ -349,7 +358,7 @@ class ACLComponent extends Component
                     break;
             }
 
-            $this->log(__d('bt_acl', 'The user was prevented from access controller/action: "{0}" because he had no "{1}" permission at least one module', $this->request->param('controller') . '/' . $this->request->param('action'), $typeLabel), \Psr\Log\LogLevel::NOTICE);
+            $this->log(__d('bt_acl', 'The user was prevented from access controller/action: "{0}" because he had no "{1}" permission at least one module', $this->getController()->getRequest()->getParam('controller') . '/' . $this->getController()->getRequest()->getParam('action'), $typeLabel), LogLevel::NOTICE);
 
             if ($this->_defaultDenyType == 'flash')
             {
@@ -361,16 +370,19 @@ class ACLComponent extends Component
                 return false;
             } elseif ($this->_defaultDenyType == 'exception')
             {
-                throw new \Cake\Network\Exception\MethodNotAllowedException(__d('bt_acl', 'You must be authorized to "{0}" at least one module', $typeLabel));
+                throw new MethodNotAllowedException(__d('bt_acl', 'You must be authorized to "{0}" at least one module', $typeLabel));
             }
         }
+        return false;
     }
 
     /**
      * Verifies if the logged in user is allowed in module "x" with permission "y". If yes, trigger an exception, if not, grant the permission.
      * @param int $module
      * @param ACLPermissions $type
-     * @throws \Cake\Network\Exception\MethodNotAllowedException
+     * @param null $redirect
+     * @param null $denyType
+     * @return bool
      */
     public function deny($module, $type, $redirect = null, $denyType = null)
     {
@@ -389,6 +401,7 @@ class ACLComponent extends Component
             return true;
         } else
         {
+            $typeLabel = '';
             switch ($type)
             {
                 case ACLPermissions::READ :
@@ -403,7 +416,7 @@ class ACLComponent extends Component
             }
             $module = $this->Modules->get($module);
 
-            $this->log(__d('bt_acl', 'The user was prevented from access controller/action: "{0}" because he had "{1}" permission on the module "{2}"', $this->request->param('controller') . '/' . $this->request->param('action'), $typeLabel, $module->name), \Psr\Log\LogLevel::NOTICE);
+            $this->log(__d('bt_acl', 'The user was prevented from access controller/action: "{0}" because he had "{1}" permission on the module "{2}"', $this->getController()->getRequest()->getParam('controller') . '/' . $this->getController()->getRequest()->getParam('action'), $typeLabel, $module->name), LogLevel::NOTICE);
 
             if ($this->_defaultDenyType == 'flash')
             {
@@ -415,9 +428,10 @@ class ACLComponent extends Component
                 return false;
             } elseif ($this->_defaultDenyType == 'exception')
             {
-                throw new \Cake\Network\Exception\MethodNotAllowedException(__d('bt_acl', 'You are not allowed to "{0}" in module "{1}"', $typeLabel, $module->name));
+                throw new MethodNotAllowedException(__d('bt_acl', 'You are not allowed to "{0}" in module "{1}"', $typeLabel, $module->name));
             }
         }
+        return false;
     }
 
     /**
@@ -428,7 +442,7 @@ class ACLComponent extends Component
     {
         return $this->redirectUrl;
     }
-    
+
     /**
      * Return a response redirect
      * @return mixed
@@ -437,7 +451,7 @@ class ACLComponent extends Component
     {
         return $this->_registry->getController()->redirect($this->getRedirectUrl());
     }
-    
+
     /**
      * Set a array or string of redirect
      * @param mixed $url
