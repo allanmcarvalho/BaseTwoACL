@@ -47,23 +47,18 @@ class ACLInputHelper extends Helper
     public function initialize(array $config)
     {
         parent::initialize($config);
-        $this->module      = $config['module'];
+        $this->module = $config['module'];
         $this->permissions = $config['permissions'];
 
-        if ($this->permissions == false)
-        {
+        if ($this->permissions == false) {
             $this->permission = 0;
-        } elseif ($this->permissions['delete'] == true)
-        {
+        } elseif ($this->permissions['delete'] == true) {
             $this->permission = 3;
-        } elseif ($this->permissions['write'] == true)
-        {
+        } elseif ($this->permissions['write'] == true) {
             $this->permission = 2;
-        } elseif ($this->permissions['read'] == true)
-        {
+        } elseif ($this->permissions['read'] == true) {
             $this->permission = 1;
-        } else
-        {
+        } else {
             $this->permission = 0;
         }
 

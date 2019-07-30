@@ -59,7 +59,7 @@ class ACLComponent extends Component
 
         $config += [
             'denyType' => 'flash',
-            'module'   => 'Modules',
+            'module' => 'Modules',
             'redirect' => $this->getController()->getRequest()->referer()
         ];
 
@@ -68,7 +68,7 @@ class ACLComponent extends Component
         $this->_defaultModule = $config['module'];
 
         $this->_defaultRedirect = $config['redirect'];
-        $this->redirectUrl      = $config['redirect'];
+        $this->redirectUrl = $config['redirect'];
 
         $this->Modules = TableRegistry::getTableLocator()->get($this->_defaultModule);
         parent::initialize($config);
@@ -81,8 +81,7 @@ class ACLComponent extends Component
      */
     private function _setDenyType($type)
     {
-        if (!in_array(strtolower($type), ['exception', 'flash', 'boolean']))
-        {
+        if (!in_array(strtolower($type), ['exception', 'flash', 'boolean'])) {
             throw new FatalErrorException(__d('bt_acl', 'The "errorType" config should be "flash", "boolean" or "exception"'));
         }
 
@@ -97,8 +96,7 @@ class ACLComponent extends Component
      */
     private function decompose($value)
     {
-        if ($value === null)
-        {
+        if ($value === null) {
             throw new FatalErrorException(__d('bt_acl', 'A value is required for decomposition'));
         }
 
@@ -107,19 +105,15 @@ class ACLComponent extends Component
         $maxAllowedValue = ($max * 2) - 1;
 
 
-        if ($value > $maxAllowedValue)
-        {
+        if ($value > $maxAllowedValue) {
             throw new FatalErrorException(__d('bt_acl', 'The value is greater than the maximum possible sum'));
         }
         $result = [];
-        for ($i = $max; $i >= 1; $i = $i / 2)
-        {
-            if ($value >= $i and $value < 2 * $i)
-            {
+        for ($i = $max; $i >= 1; $i = $i / 2) {
+            if ($value >= $i and $value < 2 * $i) {
                 $result[$i] = true;
-                $value      -= $i;
-            } else
-            {
+                $value -= $i;
+            } else {
                 $result[$i] = false;
             }
         }
@@ -135,37 +129,32 @@ class ACLComponent extends Component
      */
     public function patchUserEntity($user, $data)
     {
-        if (!isset($data['base_two_acl']))
-        {
+        if (!isset($data['base_two_acl'])) {
             throw new FatalErrorException(__d('bt_acl', 'Required data not found in request'));
         }
 
-        $read   = 0;
-        $write  = 0;
+        $read = 0;
+        $write = 0;
         $delete = 0;
 
         ksort($data['base_two_acl']);
 
-        foreach ($data['base_two_acl'] as $key => $permission)
-        {
+        foreach ($data['base_two_acl'] as $key => $permission) {
 
-            if ($permission == 1)
-            {
+            if ($permission == 1) {
                 $read += $key;
-            } elseif ($permission == 2)
-            {
-                $read  += $key;
+            } elseif ($permission == 2) {
+                $read += $key;
                 $write += $key;
-            } elseif ($permission == 3)
-            {
-                $read   += $key;
-                $write  += $key;
+            } elseif ($permission == 3) {
+                $read += $key;
+                $write += $key;
                 $delete += $key;
             }
         }
 
-        $user->acl_read   = $read;
-        $user->acl_write  = $write;
+        $user->acl_read = $read;
+        $user->acl_write = $write;
         $user->acl_delete = $delete;
 
         return $user;
@@ -180,19 +169,16 @@ class ACLComponent extends Component
      */
     public function verify($module, $type)
     {
-        if (!in_array($type, [0, 1, 2, 3]))
-        {
+        if (!in_array($type, [0, 1, 2, 3])) {
             throw new FatalErrorException(__d('bt_acl', 'Invalid ACL permission type'));
         }
 
-        if (!$this->getController()->getRequest()->getSession()->check('Auth.User'))
-        {
+        if (!$this->getController()->getRequest()->getSession()->check('Auth.User')) {
             return false;
         }
 
         $value = -1;
-        switch ($type)
-        {
+        switch ($type) {
             case ACLPermissions::READ :
                 $value = $this->getController()->getRequest()->getSession()->read('Auth.User.acl_read');
                 break;
@@ -206,11 +192,9 @@ class ACLComponent extends Component
 
         $decomposed = $this->decompose($value);
 
-        if (isset($decomposed[$module]))
-        {
-            return (bool) $decomposed[$module];
-        } else
-        {
+        if (isset($decomposed[$module])) {
+            return (bool)$decomposed[$module];
+        } else {
             throw new FatalErrorException(__d('bt_acl', 'Module id: {0} does not exist. It must be of the power base 2. Ex.: 1, 2, 4, 8, 16...', $module));
         }
     }
@@ -223,18 +207,15 @@ class ACLComponent extends Component
      */
     public function verifyIfHaveAnyPermisson($type)
     {
-        if (!in_array($type, [0, 1, 2, 3]))
-        {
+        if (!in_array($type, [0, 1, 2, 3])) {
             throw new FatalErrorException(__d('bt_acl', 'Invalid ACL permission type'));
         }
 
-        if (!$this->request->session()->check('Auth.User'))
-        {
+        if (!$this->request->session()->check('Auth.User')) {
             return false;
         }
 
-        switch ($type)
-        {
+        switch ($type) {
             case ACLPermissions::READ :
                 $value = $this->getController()->getRequest()->getSession()->read('Auth.User.acl_read');
                 break;
@@ -249,12 +230,9 @@ class ACLComponent extends Component
         $decomposed = $this->decompose($value);
 
 
-
         $result = false;
-        foreach ($decomposed as $key => $item)
-        {
-            if ($item == true)
-            {
+        foreach ($decomposed as $key => $item) {
+            if ($item == true) {
                 $result[$key] = $item;
             }
         }
@@ -272,24 +250,19 @@ class ACLComponent extends Component
      */
     public function allow($module, $type, $redirect = null, $denyType = null)
     {
-        if ($redirect !== null)
-        {
+        if ($redirect !== null) {
             $this->_defaultRedirect = $redirect;
         }
 
-        if ($denyType !== null)
-        {
+        if ($denyType !== null) {
             $this->_setDenyType($denyType);
         }
 
-        if ($this->verify($module, $type))
-        {
+        if ($this->verify($module, $type)) {
             return true;
-        } else
-        {
+        } else {
             $typeLabel = '';
-            switch ($type)
-            {
+            switch ($type) {
                 case ACLPermissions::READ :
                     $typeLabel = __d('bt_acl', 'read');
                     break;
@@ -304,16 +277,13 @@ class ACLComponent extends Component
 
             $this->log(__d('bt_acl', 'The user was prevented from access controller/action: "{0}" because he had no "{1}" permission on the module "{2}"', $this->getController()->getRequest()->getParam('controller') . '/' . $this->getController()->getRequest()->getParam('action'), $typeLabel, $module->name), LogLevel::NOTICE);
 
-            if ($this->_defaultDenyType == 'flash')
-            {
+            if ($this->_defaultDenyType == 'flash') {
                 $this->Flash->error(__d('bt_acl', 'You are not allowed to "{0}" in module "{1}"', $typeLabel, $module->name));
                 $this->redirectUrl = $this->_defaultRedirect;
                 return false;
-            } elseif ($this->_defaultDenyType == 'boolean')
-            {
+            } elseif ($this->_defaultDenyType == 'boolean') {
                 return false;
-            } elseif ($this->_defaultDenyType == 'exception')
-            {
+            } elseif ($this->_defaultDenyType == 'exception') {
                 throw new MethodNotAllowedException(__d('bt_acl', 'You are not allowed to "{0}" in module "{1}"', $typeLabel, $module->name));
             }
         }
@@ -329,24 +299,19 @@ class ACLComponent extends Component
      */
     public function allowIfHaveAnyPermission($type, $redirect = null, $denyType = null)
     {
-        if ($redirect !== null)
-        {
+        if ($redirect !== null) {
             $this->_defaultRedirect = $redirect;
         }
 
-        if ($denyType !== null)
-        {
+        if ($denyType !== null) {
             $this->_setDenyType($denyType);
         }
 
-        if ($this->verifyIfHaveAnyPermisson($type))
-        {
+        if ($this->verifyIfHaveAnyPermisson($type)) {
             return true;
-        } else
-        {
+        } else {
             $typeLabel = '';
-            switch ($type)
-            {
+            switch ($type) {
                 case ACLPermissions::READ :
                     $typeLabel = __d('bt_acl', 'read');
                     break;
@@ -360,16 +325,13 @@ class ACLComponent extends Component
 
             $this->log(__d('bt_acl', 'The user was prevented from access controller/action: "{0}" because he had no "{1}" permission at least one module', $this->getController()->getRequest()->getParam('controller') . '/' . $this->getController()->getRequest()->getParam('action'), $typeLabel), LogLevel::NOTICE);
 
-            if ($this->_defaultDenyType == 'flash')
-            {
+            if ($this->_defaultDenyType == 'flash') {
                 $this->Flash->error(__d('bt_acl', 'You must be authorized to "{0}" at least one module', $typeLabel));
                 $this->redirectUrl = $this->_defaultRedirect;
                 return false;
-            } elseif ($this->_defaultDenyType == 'boolean')
-            {
+            } elseif ($this->_defaultDenyType == 'boolean') {
                 return false;
-            } elseif ($this->_defaultDenyType == 'exception')
-            {
+            } elseif ($this->_defaultDenyType == 'exception') {
                 throw new MethodNotAllowedException(__d('bt_acl', 'You must be authorized to "{0}" at least one module', $typeLabel));
             }
         }
@@ -386,24 +348,19 @@ class ACLComponent extends Component
      */
     public function deny($module, $type, $redirect = null, $denyType = null)
     {
-        if ($redirect !== null)
-        {
+        if ($redirect !== null) {
             $this->_defaultRedirect = $redirect;
         }
 
-        if ($denyType !== null)
-        {
+        if ($denyType !== null) {
             $this->_setDenyType($denyType);
         }
 
-        if (!$this->verify($module, $type))
-        {
+        if (!$this->verify($module, $type)) {
             return true;
-        } else
-        {
+        } else {
             $typeLabel = '';
-            switch ($type)
-            {
+            switch ($type) {
                 case ACLPermissions::READ :
                     $typeLabel = __d('bt_acl', 'read');
                     break;
@@ -418,16 +375,13 @@ class ACLComponent extends Component
 
             $this->log(__d('bt_acl', 'The user was prevented from access controller/action: "{0}" because he had "{1}" permission on the module "{2}"', $this->getController()->getRequest()->getParam('controller') . '/' . $this->getController()->getRequest()->getParam('action'), $typeLabel, $module->name), LogLevel::NOTICE);
 
-            if ($this->_defaultDenyType == 'flash')
-            {
+            if ($this->_defaultDenyType == 'flash') {
                 $this->Flash->error(__d('bt_acl', 'You can not continue because you are allowed to "{0}" in module "{1}"', $typeLabel, $module->name));
                 $this->redirectUrl = $this->_defaultRedirect;
                 return false;
-            } elseif ($this->_defaultDenyType == 'boolean')
-            {
+            } elseif ($this->_defaultDenyType == 'boolean') {
                 return false;
-            } elseif ($this->_defaultDenyType == 'exception')
-            {
+            } elseif ($this->_defaultDenyType == 'exception') {
                 throw new MethodNotAllowedException(__d('bt_acl', 'You are not allowed to "{0}" in module "{1}"', $typeLabel, $module->name));
             }
         }

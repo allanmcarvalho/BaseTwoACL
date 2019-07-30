@@ -15,9 +15,9 @@ namespace BaseTwoACL\Controller\Component;
  */
 abstract class ACLPermissions
 {
-    
-    const READ    = 1;
-    const WRITE   = 2;
-    const DELETE  = 3;
+
+    const READ = 1;
+    const WRITE = 2;
+    const DELETE = 3;
 
 }
