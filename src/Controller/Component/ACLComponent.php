@@ -163,7 +163,7 @@ class ACLComponent extends Component
     /**
      * Verifies if the logged in user is allowed in module "x" with permission "y"
      * @param int $module module id to verify
-     * @param ACLPermissions $type type of permission to verify
+     * @param int $type type of permission to verify
      * @return boolean
      * @throws FatalErrorException
      */
@@ -201,7 +201,7 @@ class ACLComponent extends Component
 
     /**
      * Verifies if the logged in user is allowed a in at least one module with permission "x"
-     * @param ACLPermissions $type type of permission to verify
+     * @param int $type type of permission to verify
      * @return boolean
      * @throws FatalErrorException
      */
@@ -243,7 +243,7 @@ class ACLComponent extends Component
     /**
      * Verifies if the logged in user is allowed in module "x" with permission "y". If yes, grant the permission, if not, trigger an exception.
      * @param int $module module id to verify
-     * @param ACLPermissions $type type of permission to verify
+     * @param int $type type of permission to verify
      * @param null $redirect
      * @param null $denyType
      * @return bool Description
@@ -292,7 +292,7 @@ class ACLComponent extends Component
 
     /**
      * Verifies if the logged in user is allowed in module "x" with permission "y". If yes, grant the permission, if not, trigger an exception.
-     * @param ACLPermissions $type type of permission to verify
+     * @param int $type type of permission to verify
      * @param null $redirect
      * @param null $denyType
      * @return bool Description
@@ -341,7 +341,7 @@ class ACLComponent extends Component
     /**
      * Verifies if the logged in user is allowed in module "x" with permission "y". If yes, trigger an exception, if not, grant the permission.
      * @param int $module
-     * @param ACLPermissions $type
+     * @param int $type
      * @param null $redirect
      * @param null $denyType
      * @return bool

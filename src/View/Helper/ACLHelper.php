@@ -116,7 +116,7 @@ class ACLHelper extends Helper
     /**
      * Verifies if the logged in user is allowed in module "x" with permission "y"
      * @param int $module
-     * @param ACLPermissions $type
+     * @param int $type
      * @return boolean
      * @throws FatalErrorException
      */
@@ -153,7 +153,7 @@ class ACLHelper extends Helper
 
     /**
      * Verifies if the logged in user is allowed a in at least one module with permission "x"
-     * @param ACLPermissions $type type of permission to verify
+     * @param int $type type of permission to verify
      * @return boolean
      * @throws FatalErrorException
      */
