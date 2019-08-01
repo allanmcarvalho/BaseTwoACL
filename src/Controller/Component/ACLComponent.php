@@ -211,7 +211,7 @@ class ACLComponent extends Component
             throw new FatalErrorException(__d('bt_acl', 'Invalid ACL permission type'));
         }
 
-        if (!$this->request->session()->check('Auth.User')) {
+        if (!$this->getController()->getRequest()->getSession()->check('Auth.User')) {
             return false;
         }
 
