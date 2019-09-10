@@ -13,7 +13,7 @@ use Cake\ORM\Entity;
 use Cake\View\Helper;
 
 /**
- * CakePHP AclInputHelper
+ * CakePHP ACLInputHelper
  * @property Helper\FormHelper Form
  * @author allan
  */

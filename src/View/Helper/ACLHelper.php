@@ -65,7 +65,7 @@ class ACLHelper extends Helper
 
         $result = [];
         foreach ($modules as $module) {
-            $result[] = new AclInputHelper($this->_View, [
+            $result[] = new ACLInputHelper($this->_View, [
                 'module' => $module,
                 'permissions' => [
                     'id' => $module->id,
